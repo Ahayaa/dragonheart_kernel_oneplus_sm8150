@@ -274,7 +274,7 @@ void fuse_release_common(struct file *file, bool isdir)
 	int opcode = isdir ? FUSE_RELEASEDIR : FUSE_RELEASE;
 
 	fuse_shortcircuit_release(ff);
-	
+
 	fuse_passthrough_release(&ff->passthrough);
 
 	fuse_prepare_release(ff, file->f_flags, opcode);
@@ -965,6 +965,8 @@ static ssize_t fuse_file_read_iter(struct kiocb *iocb, struct iov_iter *to)
 
 	if (ff && ff->rw_lower_file)
 	  ret_val = fuse_shortcircuit_read_iter(iocb, to);
+	else if (ff && ff->passthrough.filp)
+	  ret_val = fuse_passthrough_read_iter(iocb, to);
 	else
 	  ret_val = generic_file_read_iter(iocb, to);
 	return ret_val;
@@ -1211,6 +1213,9 @@ static ssize_t fuse_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
 	struct inode *inode = mapping->host;
 	ssize_t err;
 	loff_t endbyte = 0;
+
+	if (ff->passthrough.filp)
+		return fuse_passthrough_write_iter(iocb, from);
 
 	if (ff && ff->rw_lower_file) {
 		/* Update size (EOF optimization) and mode (SUID clearing) */
