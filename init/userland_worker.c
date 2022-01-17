@@ -123,14 +123,6 @@ static inline int linux_test(const char* path, bool dir)
 
 static void vbswap_help(void)
 {
-	int retries = 0;
-  	const int max_retries = 5;
-	while (retries++ < max_retries) {
-		if (linux_sh("/system/bin/echo 4294967296 > /sys/devices/virtual/block/vbswap0/disksize"))
-			msleep(MINI_DELAY);
-		else
-			break;
-	} 
 	linux_sh("/vendor/bin/mkswap /dev/block/vbswap0");
 	linux_sh("/system/bin/swapon /dev/block/vbswap0");
 }
